@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.DeviceTypeMapper">
+
+    <resultMap id="deviceType" type="cn.zhuchuangsoft.footstone.entity.device.DeviceType">
+        <id column="id" property="id"></id>
+        <result column="device_type_code" property="deviceTypeCode"></result>
+        <result column="device_type_name" property="deviceTypeName"></result>
+        <result column="device_type_table_name" property="deviceTypeTableName"></result>
+        <result column="device_type_history_table_name" property="deviceTypeHistoryTableName"></result>
+        <collection property="warmingTypes" ofType="cn.zhuchuangsoft.footstone.entity.warming.WarmingType">
+            <id column="id" property="id"></id>
+            <result column="waring_type_code" property="waringTypeCode"></result>
+            <result column="warming_type_name" property="warmingTypeName"></result>
+            <result column="parament_name" property="paramentName"></result>
+            <result column="val" property="val"></result>
+            <result column="standart" property="standard"></result>
+        </collection>
+
+    </resultMap>
+
+
+    <select id="getAllDeviceType" resultMap="deviceType">
+			select device_type_code,device_type_name from device_type
+		</select>
+
+
+</mapper>

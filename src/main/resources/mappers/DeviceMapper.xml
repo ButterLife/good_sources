@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.DeviceMapper">
+
+    <resultMap id="device" type="cn.zhuchuangsoft.footstone.entity.device.Device1">
+        <id column="id" property="id"/>
+        <result column="DEVICE_CODE" property="deviceCode"/>
+        <result column="DEVICE_NAME" property="deviceName"/>
+        <result column="IMEI" property="imei"/>
+        <result column="Device_ID" property="deviceId"/>
+        <result column="Controller_ID" property="controllerId"/>
+        <result column="SN" property="sn"/>
+        <result column="LINE_NO" property="lineNo"/>
+        <result column="DEVICE_PROVINCE" property="deviceProvince"/>
+        <result column="DEVICE_CITY" property="deviceCity"/>
+        <result column="DEVICE_COUNTY" property="deviceCounty"/>
+        <result column="DEVICE_ADDRESS" property="deviceAddress"/>
+        <result column="LAT" property="lat"/>
+        <result column="LON" property="lon"/>
+        <result column="MOBILE" property="mobile"/>
+        <result column="DEVICE_STATE" property="deviceState"/>
+        <result column="CREATE_TIME" property="createTime"/>
+        <result column="UPDATE_TIME" property="updateTime"/>
+        <result column="OPERATER" property="operater"/>
+        <result column="IS_INSTALL" property="isInstall"/>
+
+        <result column="device_type_code" property="deviceTypeCode"/>
+        <result column="device_type_name" property="deviceTypeName"/>
+
+        <result column="ADMIN_NAME" property="adminName"/>
+        <result column="ADMIN_TEL" property="adminTel"/>
+        <result column="DEVICE_NAME" property="deviceName"/>
+
+
+        <association column="INSYALL_PLEACE_CODE" property="insyallPleaceCode">
+            <result column="INSTALL_PLACE_CODE" property="installPlaceCode"/>
+            <result column="INSTALL_PLACE_NAME" property="installPlaceName"/>
+            <result column="INSTALL_PLACE_ADDRESS" property="installPlaceAddress"/>
+            <result column="INSTALL_PLACE_LAT" property="installPlaceLat"/>
+            <result column="INSTALL_PLACE_LON" property="installPlaceLon"/>
+            <result column="INSTALL_PLACE_CREATE_TIME" property="installPlaceCreateTime"/>
+            <result column="INSTALL_PLACE_UPDATE_TIME" property="installPlaceUpdateTime"/>
+            <result column="INSTALL_PLACE_operater" property="installPlaceOperater"/>
+
+        </association>
+        <!--		<association column="TYPE_CODE" property="typeCode"  javaType="cn.zhuchuangsoft.footstone.entity.device.DeviceType" >
+                    <result column="device_type_code" property="deviceTypeCode"></result>
+                    <result column="device_type_name" property="deviceTypeName"></result>
+                </association>-->
+        <association column="PROXY_CODE" property="proxy" javaType="cn.zhuchuangsoft.footstone.entity.user.Proxy">
+            <result column="proxy_code" property="proxyCode"/>
+            <result column="proxy_name" property="proxyName"/>
+            <result column="proxy_address" property="proxyAddress"/>
+            <result column="proxy_mobile" property="proxyMobile"/>
+            <result column="proxy_operater" property="operater"/>
+        </association>
+        <association property="poweredDevice" javaType="cn.zhuchuangsoft.footstone.entity.device.PoweredDevice">
+            <result column="A_voltage" property="voltageA"/>
+            <result column="B_voltage" property="voltageB"/>
+            <result column="C_voltage" property="voltageC"/>
+            <result column="A_current" property="currentA"/>
+            <result column="B_current" property="currentB"/>
+            <result column="C_current" property="currentC"/>
+            <result column="A_temp" property="tempA"/>
+            <result column="B_temp" property="tempB"/>
+            <result column="C_temp" property="tempC"/>
+            <result column="N_temp" property="tempN"/>
+            <result column="A_power" property="powerA"/>
+            <result column="B_power" property="powerB"/>
+            <result column="C_power" property="powerC"/>
+            <result column="GPRS" property="GPRS"/>
+        </association>
+
+    </resultMap>
+
+    <sql id="deviceFields">
+		DEVICE_CODE,DEVICE_NAME,`TYPE_CODE`,Device_ID,Controller_ID,SN,LINE_NO,IMEI,INSYALL_PLEACE_CODE,DEVICE_PROVINCE,DEVICE_CITY,DEVICE_COUNTY,`DEVICE_ADDRESS`,
+		LAT,LON,MOBILE,DEVICE_STATE,CREATE_TIME,UPDATE_TIME,OPERATER,IS_INSTALL
+	</sql>
+    <sql id="poweredFields">
+		t.A_Voltage,t.B_Voltage,t.C_Voltage,t.A_Current,
+		t.B_Current ,t.C_Current,t.A_Temp,t.B_Temp,t.C_Temp,
+		t.N_Temp,t.A_Power,t.B_Power,t.C_Power,t.GPRS
+	</sql>
+    <sql id="deviceUpdate">
+        <if test="typeCode.deviceTypeCode!=null and typeCode.deviceTypeCode!=''">
+            TYPE_CODE=#{typeCode.deviceTypeCode},
+        </if>
+        <if test="imei!=null and imei!=''">
+            IMEI=#{itmet},
+        </if>
+        <if test="insyallPleaceCode.installPlaceCode!=null and insyallPleaceCode.installPlaceCode!=''">
+            INSYALL_PLEACE_CODE=#{insyallPleaceCode.installPlaceCode},
+        </if>
+        <if test="deviceProvince!=null and deviceProvince!=''">
+            DEVICE_PROVINCE=#{deviceProvince},
+        </if>
+        <if test="deviceCity!=null and deviceCity!=''">
+            DEVICE_CITY=#{deviceCity},
+        </if>
+        <if test="deviceCounty!=null and deviceCounty!=''">
+            DEVICE_COUNTY=#{deviceCounty},
+        </if>
+        <if test="deviceAddress!=null and deviceAddress!=''">
+            DEVICE_ADDRESS=#{deviceAddress},
+        </if>
+        <if test="lat!=null and lat!=''">
+            LAT=#{lat},
+        </if>
+        <if test="lon!=null and lon!=''">
+            LON=#{lon},
+        </if>
+        <if test="mobile!=null and mobile!=''">
+            MOBILE=#{mobile},
+        </if>
+        <if test="deviceState!=null and deviceState!=''">
+            DEVICE_STATE=#{deviceState},
+        </if>
+        <if test="updateTime!=null and updateTime!=''">
+            UPDATE_TIME=#{updateTime},
+        </if>
+        <if test="proxy.proxyCode!=null and proxy.proxyCode!=''">
+            PROXY_CODE=#{proxy.proxyCode},
+        </if>
+        <if test="operater!=null and operater!=''">
+            OPERATER=#{operater},
+        </if>
+        <if test="isInstall!=0">
+            IS_INSTALL=#{isInstall}
+        </if>
+    </sql>
+
+    <sql id="fuzzyQuery">
+        <where>
+
+            <if test="deviceParams.deviceProvince!=null and deviceParams.deviceProvince!=''">
+                and DEVICE_PROVINCE like concat('%', #{deviceParams.deviceProvince}, '%')
+            </if>
+            <if test="deviceParams.deviceCity!=null and deviceParams.deviceCity!=''">
+                and DEVICE_CITY like concat('%', #{deviceParams.deviceCity}, '%')
+            </if>
+            <if test="deviceParams.deviceCounty!=null and deviceParams.deviceCounty!=''">
+                and DEVICE_COUNTY like concat('%', #{deviceParams.deviceCounty}, '%')
+            </if>
+            <if test="deviceParams.deviceAddress!=null and deviceParams.deviceAddress!=''">
+                and DEVICE_ADDRESS like concat('%', #{deviceParams.deviceAddress}, '%')
+            </if>
+            <if test="deviceParams.mobile!=null and deviceParams.mobile!=''">
+                and MOBILE like concat('%', #{deviceParams.mobile}, '%')
+            </if>
+            <if test="deviceParams.deviceState!=null and deviceParams.deviceState!=''">
+                and DEVICE_STATE like concat('%', #{deviceParams.deviceState}, '%')
+            </if>
+            <if test="deviceParams.createTime!=null and deviceParams.createTime!=''">
+                and CREATE_TIME &gt; #{deviceParams.createTime}
+            </if>
+            <if test="deviceParams.updateTime!=null and deviceParams.updateTime!=''">
+                and UPDATE_TIME &gt; #{deviceParams.updateTime}
+            </if>
+
+            <if test="1==1">
+                and is_delete!=1
+            </if>
+
+        </where>
+
+    </sql>
+    <insert id="addDevices" parameterType="cn.zhuchuangsoft.footstone.entity.device.Device1">
+        insert into device(<include refid="deviceFields"/>,PROXY_CODE)
+        values(#{deviceCode},#{deviceName},#{typeCode.deviceTypeCode},#{deviceId},#{controllerId},#{sn},#{lineNo},#{imei},#{insyallPleaceCode.installPlaceCode},#{deviceProvince},#{deviceCity},
+        #{deviceCounty},#{deviceAddress},#{lat},#{lon},#{mobile},#{deviceState},#{createTime},#{updateTime},#{operater},#{isInstall},#{proxyCode})
+    </insert>
+
+    <select id="getDeviceAll" resultType="map">
+        SELECT<include refid="deviceFields"/>,dt.device_type_code,dt.device_type_name
+        ,p.proxy_code,p.proxy_name,p.proxy_address,p.proxy_mobile,p.proxy_operater,
+        ip.*
+        FROM
+        device d INNER JOIN device_type dt ON
+        d.TYPE_CODE=dt.device_type_code LEFT JOIN
+        proxy p ON p.proxy_code=d.PROXY_CODE
+        LEFT JOIN INSTALLPLACE ip ON d.INSYALL_PLEACE_CODE=ip.INSTALL_PLACE_CODE
+        <include refid="fuzzyQuery"/>
+        order by UPDATE_TIME desc
+    </select>
+
+    <select id="selectDeviceByProxy" resultMap="device">
+        SELECT
+        <include refid="deviceFields"/>
+        FROM device
+        WHERE DEVICE_CODE IN
+        (SELECT device_id FROM user_device WHERE proxy_id=#{userId})
+        <if test="deviceProvince!=null and deviceProvince!=''">
+            and DEVICE_PROVINCE like concat('%', #{DEVICE_PROVINCE}, '%')
+        </if>
+        <if test="deviceCity!=null and deviceCity!=''">
+            and DEVICE_CITY like concat('%', #{deviceCity}, '%')
+        </if>
+        <if test="deviceCounty!=null and deviceCounty!=''">
+            and DEVICE_COUNTY like concat('%', #{deviceCounty}, '%')
+        </if>
+        <if test="deviceAddress!=null and deviceAddress!=''">
+            and DEVICE_ADDRESS like concat('%', #{deviceAddress}, '%')
+        </if>
+        <if test="mobile!=null and mobile!=''">
+            and MOBILE like concat('%', #{mobile}, '%')"%"#{}"%"
+        </if>
+        <if test="deviceState!=null and deviceState!=''">
+            and DEVICE_STATE like concat('%', #{deviceState}, '%')
+        </if>
+        <if test="createTime!=null and createTime!=''">
+            and CREATE_TIME like concat('%', #{createTime}, '%')
+        </if>
+        <if test="updateTime!=null and updateTime!=''">
+            and UPDATE_TIME like concat('%', #{updateTime}, '%')
+        </if>
+        <if test="deviceState!=null and deviceState!=''">
+            and DEVICE_STATE like concat('%', #{deviceState}, '%')
+        </if>
+        AND is_delete!=1
+        order by UPDATE_TIME desc
+    </select>
+
+    <select id="selectDeviceByUser" resultMap="device">
+        SELECT
+        <include refid="deviceFields"/>
+        FROM device
+        WHERE DEVICE_CODE IN
+        (SELECT device_id FROM user_device WHERE mobile=#{mobile})
+        AND is_delete!=1
+    </select>
+
+    <select id="getDeviceByDeviceCode" resultType="map">
+        SELECT
+        <include refid="deviceFields"/>
+        ,
+        dt.device_type_code,
+        dt.device_type_name,
+        p.proxy_code,
+        p.proxy_name,
+        p.proxy_address,
+        p.proxy_mobile,
+        p.proxy_operater,
+        ip.*
+        FROM
+        device d
+        INNER JOIN device_type dt ON d.TYPE_CODE = dt.device_type_code
+        LEFT JOIN proxy p ON p.proxy_code = d.PROXY_CODE
+        LEFT JOIN INSTALLPLACE ip ON d.INSYALL_PLEACE_CODE = ip.INSTALL_PLACE_CODE
+        WHERE
+        d.DEVICE_CODE = '2-5dc0c51f4c1d6e0f08347211'
+        AND is_delete != 1
+
+        <!--SELECT d.*,dm.A_voltage,dm.B_voltage,dm.C_voltage,
+        dm.A_current,dm.B_current,dm.C_current,dm.A_temp,dm.B_temp,dm.C_temp,dm.N_temp
+        FROM device d INNER JOIN device_message dm ON
+        d.DEVICE_CODE=dm.device_code
+        WHERE d.DEVICE_CODE=#{deviceCode}
+        AND is_delete!=1-->
+
+    </select>
+
+    <update id="updateDevice" parameterType="cn.zhuchuangsoft.footstone.entity.device.Device1">
+        update device set
+        <include refid="deviceUpdate"/>
+        where DEVICE_CODE=#{deviceCode}
+    </update>
+
+    <update id="deleteManages" parameterType="java.util.List">
+        <foreach collection="list" index="index" item="item" separator=";">
+            update device
+            <set>
+                is_delete=1
+            </set>
+            where DEVICE_CODE=#{item}
+        </foreach>
+
+    </update>
+    <update id="updateByPrimaryKeySelective">
+        update device
+        <set>
+            <if test="deviceName != null">
+                Device_Name = #{deviceName,jdbcType=VARCHAR},
+            </if>
+            <if test="deviceId != null">
+                Device_ID = #{deviceId,jdbcType=VARCHAR},
+            </if>
+            <if test="controllerId != null">
+                Controller_ID = #{controllerId,jdbcType=VARCHAR},
+            </if>
+            <if test="sn != null">
+                SN = #{sn,jdbcType=VARCHAR},
+            </if>
+            <if test="lineNo != null">
+                LINE_NO = #{lineNo,jdbcType=VARCHAR},
+            </if>
+            <if test="typeCode != null">
+                TYPE_CODE = #{typeCode,jdbcType=VARCHAR},
+            </if>
+            <if test="imei != null">
+                IMEI = #{imei,jdbcType=VARCHAR},
+            </if>
+            <if test="insyallPleaceCode != null">
+                INSYALL_PLEACE_CODE = #{insyallPleaceCode,jdbcType=VARCHAR},
+            </if>
+            <if test="deviceProvince != null">
+                DEVICE_PROVINCE = #{deviceProvince,jdbcType=VARCHAR},
+            </if>
+            <if test="deviceCity != null">
+                DEVICE_CITY = #{deviceCity,jdbcType=VARCHAR},
+            </if>
+            <if test="deviceCounty != null">
+                DEVICE_COUNTY = #{deviceCounty,jdbcType=VARCHAR},
+            </if>
+            <if test="deviceAddress != null">
+                DEVICE_ADDRESS = #{deviceAddress,jdbcType=VARCHAR},
+            </if>
+            <if test="lat != null">
+                LAT = #{lat,jdbcType=VARCHAR},
+            </if>
+            <if test="lon != null">
+                LON = #{lon,jdbcType=VARCHAR},
+            </if>
+            <if test="mobile != null">
+                MOBILE = #{mobile,jdbcType=VARCHAR},
+            </if>
+            <if test="deviceState != null">
+                DEVICE_STATE = #{deviceState,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                CREATE_TIME = #{createTime,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                UPDATE_TIME = #{updateTime,jdbcType=VARCHAR},
+            </if>
+            <if test="proxyCode != null">
+                PROXY_CODE = #{proxyCode,jdbcType=VARCHAR},
+            </if>
+            <if test="operater != null">
+                OPERATER = #{operater,jdbcType=VARCHAR},
+            </if>
+            <if test="isInstall != null">
+                IS_INSTALL = #{isInstall,jdbcType=BIGINT},
+            </if>
+        </set>
+        where DEVICE_CODE= #{deviceCode,jdbcType=VARCHAR}
+    </update>
+
+</mapper>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.UserMapper">
+
+    <resultMap id="user" type="cn.zhuchuangsoft.footstone.entity.user.User">
+        <id column="id" property="id"/>
+        <result column="user_code" property="userCode"/>
+        <result column="user_name" property="userName"/>
+        <result column="password" property="password"/>
+        <result column="name" property="name"/>
+        <result column="mobile" property="mobile"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="operater" property="operater"/>
+        <result column="is_delete" property="isDelete"/>
+    </resultMap>
+    <!--	添加用户-->
+    <insert id="insertUser" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO `user` (
+		user_code,user_name,password,mobile,
+		`name`,
+		create_time,update_time,operater
+		) VALUES (
+			#{userCode},#{username},#{password},#{mobile},#{name},
+			#{createTime},#{updateTime},#{operater}
+		)
+	</insert>
+
+    <!--用户名查询-->
+    <select id="selectUserByUserName" parameterType="String" resultType="cn.zhuchuangsoft.footstone.entity.user.User">
+		SELECT *
+		FROM `user`
+		WHERE user_name=#{username}
+	</select>
+
+    <!--根据手机号进行查询-->
+    <select id="selectUserByMobile" parameterType="String" resultType="cn.zhuchuangsoft.footstone.entity.user.User">
+		select * from `user` where mobile=#{mobile}
+	</select>
+
+    <!--修改密码-->
+    <update id="modifyPassword" parameterType="cn.zhuchuangsoft.footstone.entity.user.User">
+		UPDATE `user` SET password=#{password}
+        WHERE
+        mobile=#{mobile}
+	</update>
+
+
+    <select id="judgeByUsername" parameterType="String" resultType="boolean">
+		SELECT IFNULL((SELECT true FROM USER WHERE user_name=#{username} limit 1),false)
+	</select>
+
+    <select id="judgeByMobile" parameterType="String" resultType="boolean">
+		SELECT IFNULL((SELECT true FROM USER WHERE mobile=#{mobile} limit 1),false)
+	</select>
+
+
+    <!-- 更改用户的个人资料 -->
+    <!-- Integer updateInfoByUid(User user) -->
+    <update id="updateInfoByUid">
+    UPDATE
+      `user`
+    SET
+		user_code=#{userCode},
+		user_name=#{username},
+		password=#{password},
+		name=#{name},
+		mobile=#{mobile},
+		create_time=#{createTime},
+		update_time=#{updateTime},
+        operater=#{operater}
+		WHERE
+        id=#{id}
+
+  </update>
+
+
+    <!-- 删除用户	-->
+    <delete id="deleteByUid">
+     DELETE FROM `user`
+
+     WHERE id=#{id}
+
+
+	</delete>
+
+
+</mapper>

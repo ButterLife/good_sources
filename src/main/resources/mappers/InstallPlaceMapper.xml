@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.InstallPlaceMapper">
+
+    <resultMap id="placeMap" type="cn.zhuchuangsoft.footstone.entity.InstallPlace">
+        <id column="id" property="id"/>
+        <result column="INSTALL_PLACE_CODE" property="installPlaceCode"/>
+        <result column="INSTALL_PLACE_NAME" property="installPlaceName"/>
+        <result column="INSTALL_PLACE_ADDRESS" property="installPlaceAddress"/>
+        <result column="INSTALL_PLACE_LAT" property="installPlaceLat"/>
+        <result column="INSTALL_PLACE_LON" property="installPlaceLon"/>
+        <result column="INSTALL_PLACE_CREATE_TIME" property="installPlaceCreateTime"/>
+        <result column="INSTALL_PLACE_UPDATE_TIME" property="installPlaceUpdateTime"/>
+        <result column="INSTALL_PLACE_OPERATER" property="installPlaceOperater"/>
+    </resultMap>
+    <insert id="addPlace" parameterType="cn.zhuchuangsoft.footstone.entity.InstallPlace">
+		insert into installplace(INSTALL_PLACE_NAME,INSTALL_PLACE_ADDRESS,INSTALL_PLACE_LAT,
+		INSTALL_PLACE_LON,INSTALL_PLACE_CREATE_TIME,INSTALL_PLACE_UPDATE_TIME,INSTALL_PLACE_OPERATER)values
+		(#{installPlaceName},#{installPlaceAddress},#{installPlaceLat},#{installPlaceLon},
+		#{installPlaceCreateTime},#{installPlaceUpdateTime},#{installPlaceOperater})
+
+	</insert>
+
+    <select id="getAllPlace" resultMap="placeMap">
+		select  * from installplace
+
+	</select>
+
+    <select id="getPlace" resultMap="placeMap" parameterType="String">
+		select * from installplace where INSTALL_PLACE_CODE=#{installPlaceCode}
+
+	</select>
+
+    <update id="updatePlace" parameterType="cn.zhuchuangsoft.footstone.entity.InstallPlace">
+		update installplace set INSTALL_PLACE_NAME=#{installPlaceName},INSTALL_PLACE_ADDRESS=#{installPlaceAddress},
+			INSTALL_PLACE_LAT=#{installPlaceLat},INSTALL_PLACE_LON=#{installPlaceLon},INSTALL_PLACE_UPDATE_TIME=#{installPlaceUpdateTime},
+			INSTALL_PLACE_OPERATER=#{installPlaceOperater}
+			where INSTALL_PLACE_CODE=#{installPlaceCode}
+	</update>
+
+    <delete id="deletePlace" parameterType="String">
+		delete from installplace where INSTALL_PLACE_CODE=#{installPlaceCode}
+
+	</delete>
+</mapper>

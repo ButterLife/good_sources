@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.WarmingTypeMapper">
+    <resultMap id="warmingTypes" type="cn.zhuchuangsoft.footstone.entity.warming.WarmingType">
+        <id column="id" property="id"></id>
+        <result column="warming_type_code" property="warmingTypeCode"></result>
+        <!--<result column="device_type_code" property="deviceTypeCode"></result>-->
+        <result column="typeCode" property="typeCode"></result>
+        <result column="warming_type_name" property="warmingTypeName"></result>
+        <result column="parament_name" property="paramentName"></result>
+        <result column="val" property="val"></result>
+        <result column="standart" property="standart"></result>
+        <result column="parament" property="parament"></result>
+        <result column="unit" property="unit"></result>
+    </resultMap>
+    <resultMap id="warmingType" type="cn.zhuchuangsoft.footstone.entity.warming.WarmingType">
+        <id column="id" property="id"></id>
+        <result column="parament" property="parament"></result>
+        <result column="unit" property="unit"></result>
+
+    </resultMap>
+    <select id="getWarmingType" resultMap="warmingType" parameterType="String">
+			select parament,unit from warming_type where device_type_code=#{deviceTypeCode}
+		</select>
+    <select id="getWarmingTypeList" resultMap="warmingTypes">
+			SELECT `warming_type_code`,
+			`warming_type_name`,
+			`device_type_code` as typeCode,
+			`parament_name`,
+			`val`,
+			`standart`,
+			`parament`,
+			`unit`
+			 FROM warming_type;
+		</select>
+    <update id="ignoreWarming">
+
+			UPDATE `good_source`.`warming`
+			SET
+			 `ishandle` = '1',
+			 `warming_time` = NOW()
+			WHERE
+				(`id` =#{id});
+
+		</update>
+</mapper>

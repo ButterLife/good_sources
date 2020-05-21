@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.AreaMapper">
+
+    <resultMap id="areaMap" type="cn.zhuchuangsoft.footstone.entity.Area">
+        <id column="id" property="id"/>
+        <result column="item_code" property="item_code"/>
+        <result column="item_name" property="item_name"/>
+    </resultMap>
+    <insert id="insertArea" parameterType="java.util.List">
+        insert into area(item_code,item_name)values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.item_code},#{item.item_name})
+        </foreach>
+    </insert>
+
+    <select id="selectProvince" resultMap="areaMap">
+		select item_code,item_name from area where item_code  like '%0000'
+
+	</select>
+
+
+</mapper>

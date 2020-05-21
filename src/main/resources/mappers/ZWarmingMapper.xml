@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.ZDeviceWarmingMapper">
+    <resultMap id="warming" type="cn.zhuchuangsoft.footstone.entity.warming.Warming">
+        <id column="id" property="id"></id>
+        <result column="warming_code" property="warmingCode"></result>
+        <result column="warming_msg" property="warmingMsg"></result>
+        <result column="warming_time" property="warmingTime"></result>
+        <result column="ishandle" property="ishandle"></result>
+        <result column="handle_time" property="handleTime"></result>
+        <result column="voltage" property="voltage"></result>
+        <result column="current" property="current"></result>
+        <result column="leak" property="leak"></result>
+    </resultMap>
+
+    <sql id="findfilds">
+		device_code,warming_code,warming_msg,warming_time,ishandle,handle_time,handle_msg
+	</sql>
+
+
+    <select id="selectDeviceWarmingByCode" resultType="map">
+        SELECT * FROM warming
+        <where>
+            AND device_code like CONCAT('%',#{deviceCode},'%')
+            <if test="query.ishandle == 0 || query.ishandle ==1">
+                AND ishandle = #{query.ishandle}
+            </if>
+            <if test="query.startTime!='' and query.startTime!=null ">
+                AND warming_time &gt;= #{query.startTime}
+            </if>
+            <if test="query.endTime!='' and query.endTime!=null">
+                AND warming_time &lt;= #{query.endTime}
+            </if>
+        </where>
+        ORDER BY device_code ,warming_time DESC
+    </select>
+
+    <select id="selectDeviceWarmingByCodes" resultType="map">
+        SELECT
+        d.DEVICE_CODE as device_code,
+        w.*,
+        t.device_type_name as type_name
+        FROM
+        warming w
+        INNER JOIN device d ON w.device_code = d.DEVICE_CODE
+        INNER JOIN device_type t on d.TYPE_CODE = t.device_type_code
+        <where>
+            AND w.device_code IN
+            <foreach collection="array" item="code" open="(" close=")" separator=",">
+                #{code}
+            </foreach>
+            <if test="query.ishandle == 0 || query.ishandle ==1">
+                AND w.ishandle = #{query.ishandle}
+            </if>
+            <if test="query.startTime!='' and query.startTime!=null ">
+                AND w.warming_time &gt;= #{query.startTime}
+            </if>
+            <if test="query.endTime!='' and query.endTime!=null">
+                AND w.warming_time &lt;= #{query.endTime}
+            </if>
+        </where>
+        ORDER BY w.device_code ,w.warming_time DESC
+    </select>
+
+    <select id="selectWarmingByCodes" resultType="map">
+        SELECT
+        d.DEVICE_CODE as device_code,
+        w.*,
+        t.device_type_name as type_name
+        FROM
+        warming w
+        INNER JOIN device d ON w.device_code = d.DEVICE_CODE
+        INNER JOIN device_type t on d.TYPE_CODE = t.device_type_code
+        <where>
+            AND w.device_code IN
+            <foreach collection="array" item="code" open="(" close=")" separator=",">
+                #{code}
+            </foreach>
+            AND w.ishandle = '0'
+
+        </where>
+        ORDER BY w.device_code ,w.warming_time DESC
+    </select>
+    <select id="selectDeviceWarmingAll" resultType="map">
+        SELECT
+        d.*,
+        w.*,
+        t.device_type_name as type_name
+        FROM
+        warming w
+        INNER JOIN device d ON w.device_code = d.DEVICE_CODE
+        INNER JOIN device_type t on d.TYPE_CODE = t.device_type_code
+        <where>
+            <if test="query.ishandle !='' and query.ishandle!=null">
+                <if test="query.ishandle == 0 or query.ishandle ==1">
+                    AND w.ishandle = #{query.ishandle}
+                </if>
+            </if>
+            <if test="query.key !=null and query.key!=''">
+                AND w.device_code LIKE CONCAT("%",#{query.key},"%") OR
+                w.warming_msg LIKE CONCAT("%",#{query.key},"%")
+            </if>
+            <if test="query.startTime!='' and query.startTime!=null ">
+                AND w.warming_time &gt;= #{query.startTime}
+            </if>
+            <if test="query.endTime!='' and query.endTime!=null">
+                AND w.warming_time &lt;= #{query.endTime}
+            </if>
+        </where>
+        ORDER BY w.device_code ,w.warming_time DESC
+    </select>
+
+    <update id="updateWarmingById">
+        update warming
+        <set>
+            ishandle = '1',
+            <if test="handleTime != null">
+                handle_time = #{handleTime,jdbcType=VARCHAR},
+            </if>
+            <if test="handleMsg != null">
+                handle_msg = #{handleMsg,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id} AND ishandle='0'
+    </update>
+    <insert id="insertWaring" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO `warming` (
+		`warming_code`,
+		`device_code`,
+		`warming_msg`,
+		`warming_time`,
+		`ishandle`)
+		VALUES
+		(
+		#{warmingCode},
+		#{deviceCode.deviceCode},
+		#{warmingMsg},
+		#{warmingTime},
+		#{ishandle}
+		);
+	</insert>
+    <select id="selectWarmingByCode" resultType="map">
+
+		SELECT
+		warming_time
+		FROM
+		warming
+		WHERE
+		device_code = #{deviceCode}
+		ORDER BY
+		warming_time DESC
+		LIMIT 1
+	</select>
+    <select id="selectSurfaceByCode" resultType="String">
+		SELECT
+		t.device_type_table_name
+		FROM
+		device d
+		INNER JOIN device_type t ON d.TYPE_CODE = t.device_type_code
+		WHERE d.DEVICE_CODE=#{deviceCode}
+	</select>
+
+    <select id="selectWarmingById" resultType="map">
+		SELECT
+		d.*,
+		i.INSTALL_PLACE_NAME,
+		i.INSTALL_PLACE_ADDRESS,
+		w.warming_time,
+		w.warming_msg,
+		w.handle_msg
+		FROM
+		warming w
+		INNER JOIN device d ON w.device_code = d.DEVICE_CODE
+		INNER JOIN installplace i ON d.INSYALL_PLEACE_CODE = i.INSTALL_PLACE_CODE
+		WHERE
+		w.id =#{id}
+	</select>
+
+    <select id="selectDeviceByMobile" resultType="string">
+   	 	SELECT device_code FROM user_device WHERE mobile =#{mobile}
+
+	</select>
+</mapper>

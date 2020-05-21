@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.DeviceHistoryMapper">
+
+    <resultMap id="deviceHistory" type="cn.zhuchuangsoft.footstone.entity.device.PoweredDeviceHistory">
+        <id column="Device_Code" property="deviceCode"/>
+        <result column="A_voltage" property="voltageA"/>
+        <result column="B_voltage" property="voltageB"/>
+        <result column="C_voltage" property="voltageC"/>
+        <result column="A_current" property="currentA"/>
+        <result column="B_current" property="currentB"/>
+        <result column="C_current" property="currentC"/>
+        <result column="A_temp" property="tempA"/>
+        <result column="B_temp" property="tempB"/>
+        <result column="C_temp" property="tempC"/>
+        <result column="N_temp" property="tempN"/>
+        <result column="A_Power" property="powerA"/>
+        <result column="B_Power" property="powerB"/>
+        <result column="C_Power" property="powerC"></result>
+        <result column="GPRS" property="GPRS"></result>
+        <result column="Create_Time" property="createTime"></result>
+    </resultMap>
+
+    <sql id="selectfield">
+		A_Voltage ,B_Voltage,C_Voltage,A_Current,
+			B_Current,C_Current,A_Temp,B_Temp ,C_Temp,
+			N_Temp ,A_Power ,B_Power ,C_Power ,GPRS
+	</sql>
+    <sql id="findDeviceByTime">
+        <where>
+            <if test="startTime!=null and startTime!=''">
+                create_time between #{startTime}
+            </if>
+            <if test="endTime!=null and endTime!=''">
+                and #{endTime}
+            </if>
+            <if test="deviceCode!=null and deviceCode!=''">
+                and device_code=#{deviceCode}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectDeviceHistory" parameterType="String" resultMap="deviceHistory">
+        select
+        <include refid="selectfield"/>
+        from t_taizhou_history
+        <include refid="findDeviceByTime"/>
+    </select>
+
+
+    <select id="getPoweredDevice" parameterType="String"
+            resultType="cn.zhuchuangsoft.footstone.entity.device.PoweredDevice">
+			select A_Voltage voltageA,B_Voltage voltageB,C_Voltage voltageC,A_Current currentA,
+			B_Current currentB,C_Current currentC,A_Temp tempA,B_Temp tempB,C_Temp tempC,
+			N_Temp tempN,A_Power powerA,B_Power powerB,C_Power powerC,GPRS
+			from t_taizhou where Device_Code=#{deviceCode}
+
+		</select>
+
+
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.ProxyMapper">
+
+    <resultMap id="proxy" type="cn.zhuchuangsoft.footstone.entity.user.Proxy">
+        <id column="id" property="id"/>
+        <result column="proxy_code" property="proxyCode"/>
+        <result column="proxy_name" property="proxyName"/>
+        <result column="proxy_address" property="proxyAddress"/>
+        <result column="proxy_mobile" property="proxyMobile"/>
+        <result column="liaison" property="liaison"/>
+        <result column="proxy_lat" property="lat"/>
+        <result column="proxy_lon" property="lon"/>
+        <result column="proxy_create_time" property="createTime"/>
+        <result column="proxy_update_time" property="updateTime"/>
+        <result column="proxy_operater" property="operater"/>
+
+    </resultMap>
+
+    <select id="proxyList" resultMap="proxy">
+		select * from proxy
+	</select>
+
+    <insert id="addProxy" parameterType="cn.zhuchuangsoft.footstone.entity.user.Proxy">
+		insert into proxy(proxy_code,proxy_name,proxy_address,proxy_mobile,liaison,
+		proxy_lat,proxy_lon,proxy_create_time,proxy_update_time,proxy_operater)
+		values(#{proxyCode},#{proxyName},#{proxyAddress},#{proxyMobile},#{liaison},#{lat},
+		#{lon},#{createTime},#{updateTime},#{operater})
+	</insert>
+
+    <select id="getProxyByCode" parameterType="String" resultMap="proxy">
+		select * from proxy
+		where proxy_code=#{proxyCode}
+	</select>
+    <update id="updateProxy" parameterType="cn.zhuchuangsoft.footstone.entity.user.Proxy">
+		update proxy set proxy_name=#{proxyName},proxy_address=#{proxyAddress},proxy_mobile=#{proxyMobile},
+		liaison=#{liaison},proxy_lat=#{lat},proxy_lon=#{lon},proxy_update_time=#{updateTime},proxy_operater=#{operater}
+		where proxy_code=#{proxyCode}
+	</update>
+    <delete id="deleteProxy" parameterType="String">
+		delete from proxy where proxy_code=#{deviceCode}
+	</delete>
+
+</mapper>

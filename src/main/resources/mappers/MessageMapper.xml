@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.zhuchuangsoft.footstone.mappers.MessageMapper">
+
+
+    <select id="getMessageListByQuery" resultType="map">
+        SELECT
+        *
+        FROM
+        message
+        <where>
+            <if test="key !=null and key!=''">
+                (place LIKE CONCAT('%', #{key},'%')
+                OR mobile LIKE CONCAT('%', #{key}, '%'))
+            </if>
+            <if test="startTime!='' and startTime!=null ">
+                AND `send _time` &gt;= #{startTime}
+            </if>
+            <if test="endTime!='' and endTime!=null">
+                AND`send _time` &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY `send _time` DESC
+    </select>
+    <select id="selectDevicePlaceByCode" resultType="map">
+			SELECT
+			i.INSTALL_PLACE_NAME,
+			i.INSTALL_PLACE_ADDRESS
+			FROM
+			device d
+			INNER JOIN installplace i ON d.INSYALL_PLEACE_CODE = i.INSTALL_PLACE_CODE
+			WHERE
+			d.DEVICE_CODE=#{deviceCode}
+	</select>
+    <insert id="insertShortMessage">
+		INSERT INTO message (
+		`send _time`,
+		`mobile`,
+		`send_type`,
+		`place`
+		)
+		VALUES
+		(
+			#{sendTime},
+			#{mobile},
+			#{sendType},
+			#{place}
+			);
+
+	</insert>
+</mapper>

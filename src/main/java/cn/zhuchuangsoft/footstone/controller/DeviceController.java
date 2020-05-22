@@ -6,6 +6,7 @@ import cn.zhuchuangsoft.footstone.entity.Device;
 import cn.zhuchuangsoft.footstone.entity.DeviceLine;
 import cn.zhuchuangsoft.footstone.entity.InstallPlace;
 import cn.zhuchuangsoft.footstone.entity.Lines;
+import cn.zhuchuangsoft.footstone.entity.device.VipDevice;
 import cn.zhuchuangsoft.footstone.entity.device.WarmingSetting;
 import cn.zhuchuangsoft.footstone.entity.warming.Warming;
 import cn.zhuchuangsoft.footstone.service.IDeviceService;
@@ -16,19 +17,27 @@ import cn.zhuchuangsoft.footstone.utils.JsonResult;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
 @RequestMapping("device")
+@Slf4j
 public class DeviceController extends BaseController {
 
     @Autowired
@@ -155,8 +164,8 @@ public class DeviceController extends BaseController {
                     warmingSetting.setDeviceCode(deviceCode);
                     warmingSetting.setDeviceId(deviceId);
                     warmingSetting.setHeightCurrent(line.getDouble("Max").intValue());
-                    warmingSetting.setHeightVoltage(line.getInteger("Over"));
-                    warmingSetting.setLowVoltage(line.getInteger("Under"));
+//                    warmingSetting.setHeightVoltage(line.getInteger("Over"));
+//                    warmingSetting.setLowVoltage(line.getInteger("Under"));
                     String highTemp = warmingServiceImpl.selectHighTemp(deviceCode);
                     if (highTemp == null) {
                         highTemp = "0";
@@ -171,9 +180,13 @@ public class DeviceController extends BaseController {
                     warmingSetting.setArc(arc);
                     warmingSetting.setLineId(lineId);
                     warmingSetting.setName(line.getString("Name"));
-                    String highPower = warmingServiceImpl.selectHightPower(deviceCode);
-                    if (highPower != null && "".equals(highPower))
-                        warmingSetting.setHeightPower(Integer.parseInt(highPower));
+                    // String highPower = warmingServiceImpl.selectHightPower(deviceCode);
+                    WarmingSetting warmingSetting1 = warmingServiceImpl.selectWarmingSetting(deviceCode);
+                    //自己取数据查看电压预警值
+                    warmingSetting.setHeightVoltage(warmingSetting1.getEarlyHeightVoleage());
+                    warmingSetting.setLowVoltage(warmingSetting1.getEarlyLowVoleage());
+                    if (warmingSetting1.getHeightPower() != null && "".equals(warmingSetting1.getHeightPower()))
+                        warmingSetting.setHeightPower(warmingSetting1.getHeightPower());
 
                     return new JsonResult<WarmingSetting>(SUCCESS, warmingSetting);
                 }
@@ -275,7 +288,7 @@ public class DeviceController extends BaseController {
                 //获取到当前的这个设备型号
                 if (devicelByDeviceIdSplit[2].equals(lineId)) {
                     String[] typeSplit = devicelByDeviceIdSplit[1].split("_");
-                    if ("H".equals(typeSplit[1])) {
+                    if (typeSplit.length > 1 && "H".equals(typeSplit[1])) {
                         if (max > 63 || max < 6) {
                             return new JsonResult<String>(FAILED, "该版本型号电流设置范围为：6--63");
                         }
@@ -332,17 +345,17 @@ public class DeviceController extends BaseController {
                 deviceCode = devicelByDeviceIdGetDeviceCode;
                 //数据库中的数据结构为：2-3PN_H-5DD2476F4C1D6E0EC8AE8622-J191291284776
                 String[] deviceCodeSplit = devicelByDeviceIdGetDeviceCode.split("-");
-                if (lineId.equals(deviceCodeSplit[2])) {
+                if (deviceCodeSplit.length >= 2 && lineId.equals(deviceCodeSplit[2])) {
                     String[] typeSplit = deviceCodeSplit[1].split("_");
                     if (typeSplit.length >= 2 && "H".equals(typeSplit[1])) {
 
-                        if ("O".equals(deviceIdSplit[1])) {
-                            if (over > 280 || over < 270) {
-                                return new JsonResult<String>(FAILED, "-过压范围：270--280");
+                        if (deviceIdSplit.length >= 2 && "O".equals(deviceIdSplit[1])) {
+                            if (over > 270 || over < 255) {
+                                return new JsonResult<String>(FAILED, "-过压范围：255--270");
                             }
                         } else {
-                            if (under < 175 || under > 205) {
-                                return new JsonResult<String>(FAILED, "-欠压范围：160--170");
+                            if (under < 175 || under > 190) {
+                                return new JsonResult<String>(FAILED, "-欠压范围：175--190");
                             }
                         }
 
@@ -350,23 +363,23 @@ public class DeviceController extends BaseController {
                         //不带H的
                         //return new JsonResult<String>(FAILED, "该版本型号电压欠压值范围：175--205，过压值范围：235--265");
                         //sb.append("该版本型号电压欠压值范围：175--205，过压值范围：235--265")
-                        if ("O".equals(deviceIdSplit[1])) {
-                            if (over > 265 || over < 235) {
-                                return new JsonResult<String>(FAILED, "-过压范围：235--265");
+                        //2-1P-5dfc8e804c1d6e27a4f28a91-J191291284776
+                        if (deviceIdSplit.length >= 2 && "O".equals(deviceIdSplit[1])) {
+                            if (over > 250 || over < 220) {
+                                return new JsonResult<String>(FAILED, "-过压压范围：220--250");
 
                             }
                         } else {
-                            if (under > 205) {
-                                return new JsonResult<String>(FAILED, "-欠压范围：175--205");
-                            }
-                            if (under < 175) {
-                                return new JsonResult<String>(FAILED, "-欠压范围：175--205");
+
+                            if (under < 180 || under > 220) {
+                                return new JsonResult<String>(FAILED, "-欠压范围：180--220");
                             }
                         }
                     }
+                    break;
                 }
             }
-            parameter.add("DeviceID=" + deviceIdSplit[0]);
+           /* parameter.add("DeviceID=" + deviceIdSplit[0]);
             parameter.add("LineID=" + lineId);
             parameter.add("Under=" + under);
             parameter.add("Over=" + over);
@@ -385,16 +398,20 @@ public class DeviceController extends BaseController {
 
                 if (jsonObject.getInteger("Code") != 1) {
                     return new JsonResult<String>(SUCCESS, "电压设置失败");
-                }
-                if (deviceCode != null) {
-                    //更改数据库中的预警值
-                    int update = warmingServiceImpl.updateWarimingSetting(deviceCode, under, over);
+                }*/
+            if (deviceCode != null) {
+                //更改数据库中的预警值
+                int update = warmingServiceImpl.updateWarimingSetting(deviceCode, under, over);
+                if (update > 0) {
                     return new JsonResult<String>(SUCCESS, "电压设置成功");
+                } else {
+                    return new JsonResult<String>(FAILED, "电压设置失败");
                 }
-
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+
+           /* } catch (IOException e) {
+                e.printStackTrace();
+            }*/
 
         }
         return new JsonResult<String>(FAILED, "没有该设备：设备ID为：" + deviceId);
@@ -484,6 +501,7 @@ public class DeviceController extends BaseController {
         }
         return new JsonResult<String>(SUCCESS, mes);
     }
+
 
     public JsonResult<String> setTemp(@ApiParam("设备ID") String deviceId, @ApiParam("线路ID") String lineNo, @ApiParam("过温动作值 单位℃(暂定限制<=200)") Integer temp) {
 
@@ -815,7 +833,6 @@ public class DeviceController extends BaseController {
                 }
             }
             deviceLine.setArc(arc);
-
             return new JsonResult<DeviceLine>(SUCCESS, deviceLine);
         } catch (IOException e) {
             e.printStackTrace();
@@ -933,6 +950,68 @@ public class DeviceController extends BaseController {
         }
         return new JsonResult<>(FAILED);
     }
+
+    /**
+     * 添加关注的警告
+     *
+     * @return List<Warming>
+     */
+    @PostMapping("save/line/warming")
+    @ApiOperation("保存关注信息")
+    public JsonResult<String> getVIPDevice(@ApiParam("设备ID") String deviceCode, @ApiParam("用户名称") String userName, @ApiParam("警告产生的时间") String warmingTime, @ApiParam("警告内容") String warmingMsg, @ApiParam("告警编码") String warmingCode) throws ParseException {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        Date parse = simpleDateFormat.parse(warmingTime);
+        warmingTime = simpleDateFormat.format(parse);
+        InstallPlace installPlace = deviceServiceImpl.getInstallPlaceValueByDeviceCoce(deviceCode);
+        //判读该关注是否已经存在
+        Boolean flag = deviceServiceImpl.selectVipDevice(deviceCode, warmingTime);
+        if (flag) {
+            return new JsonResult<String>(2, "该关注已经存在");
+        }
+        //获取到usercode
+        String selectUserCode = userServiceImpl.selectUserCode(userName);
+        VipDevice vipDevice1 = new VipDevice(0, selectUserCode, userName, deviceCode, installPlace.getInstallPlaceName(), installPlace.getInstallPlaceAddress(), warmingMsg, warmingTime, warmingCode);
+        Integer save = deviceServiceImpl.saveVipDevice(vipDevice1);
+        if (save > 0) {
+            return new JsonResult<String>(SUCCESS, "关注成功");
+        } else {
+            return new JsonResult<String>(FAILED, "关注失败");
+        }
+    }
+
+    ;
+
+    /**
+     * 获取用户的关注的警告信息
+     *
+     * @param userName 用户名称
+     * @return JsonResult<VipDevice>
+     */
+    @GetMapping("get/line/vipwarming")
+    @ApiOperation("获取用户关注的信息")
+    public JsonResult<List<VipDevice>> getVipDevice(@ApiParam("用户名称") String userName) {
+        //根据userName来获取到关注的设备
+        //获取到usercode
+        String selectUserCode = userServiceImpl.selectUserCode(userName);
+        List<VipDevice> vipDevicesList = deviceServiceImpl.selectVipDeviceByUserCode(selectUserCode);
+        if (vipDevicesList != null || vipDevicesList.size() > 0) {
+            return new JsonResult<List<VipDevice>>(SUCCESS, vipDevicesList);
+        }
+
+        return new JsonResult<List<VipDevice>>(FAILED);
+    }
+
+    @PostMapping("del/line/vipwarming")
+    @ApiOperation("用户取消关注")
+    public JsonResult<String> delVipDevice(String userName, Integer id) {
+        String selectUserCode = userServiceImpl.selectUserCode(userName);
+        Boolean flag = deviceServiceImpl.delVipDeviceByUserCodeAndId(selectUserCode, id);
+        if (flag) {
+            return new JsonResult<String>(SUCCESS, "取消关注成功");
+        }
+        return new JsonResult<String>(FAILED, "取消关注失败");
+    }
+
 
     /**
      * 添加条件查询时的方法
@@ -1070,4 +1149,6 @@ public class DeviceController extends BaseController {
         }
         return deviceLists;
     }
+
+
 }

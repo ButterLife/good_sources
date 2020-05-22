@@ -195,6 +195,6 @@ public interface WarmingSettingMapper {
     WarmingSetting getWarmingSetting(String deviceCode);
 
     //修改数据库中的值
-    @Update("UPDATE t_warmingsetting SET EARLY_HEIGHT_VOLTAGE = #{under},EARLY_LOW_VOLEAGE = #{over} WHERE DEVICE_CODE = #{deviceCode};")
+    @Update("UPDATE t_warmingsetting SET EARLY_HEIGHT_VOLTAGE = #{over},EARLY_LOW_VOLEAGE = #{under} WHERE DEVICE_CODE = #{deviceCode};")
     int updateVoltageByDeviceCode(String deviceCode, Integer under, Integer over);
 }

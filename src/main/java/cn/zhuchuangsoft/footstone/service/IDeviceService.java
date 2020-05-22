@@ -6,6 +6,7 @@ import cn.zhuchuangsoft.footstone.entity.InstallPlace;
 import cn.zhuchuangsoft.footstone.entity.QueryParameters;
 import cn.zhuchuangsoft.footstone.entity.device.Device1;
 import cn.zhuchuangsoft.footstone.entity.device.DeviceType;
+import cn.zhuchuangsoft.footstone.entity.device.VipDevice;
 import cn.zhuchuangsoft.footstone.entity.user.UserAndDevice;
 
 import java.util.List;
@@ -150,4 +151,35 @@ public interface IDeviceService {
      * @return
      */
     InstallPlace getInstallPlaceValue(String deviceId);
+
+    /**
+     * 关注线路警告
+     *
+     * @param vipDevice1
+     * @return
+     */
+    Integer saveVipDevice(VipDevice vipDevice1);
+
+    /**
+     * 根据deviceCode获取安装信息
+     *
+     * @param deviceCode
+     * @return
+     */
+    InstallPlace getInstallPlaceValueByDeviceCoce(String deviceCode);
+
+    //判读该记录是否已经存再
+    Boolean selectVipDevice(String deviceCode, String warmingTime);
+
+    //获取到用户关注的警告
+    List<VipDevice> selectVipDeviceByUserCode(String selectUserCode);
+
+    /**
+     * 用户取消关注
+     *
+     * @param selectUserCode
+     * @param id
+     * @return
+     */
+    Boolean delVipDeviceByUserCodeAndId(String selectUserCode, Integer id);
 }

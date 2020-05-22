@@ -19,7 +19,6 @@ public class Device extends BaseEntity {
     private static final long serialVersionUID = 754841082964042657L;
     @ApiModelProperty("表主键id")
     public Integer id;
-
     @ApiModelProperty("设备id")
     public String deviceId;
     @ApiModelProperty("控制器id")

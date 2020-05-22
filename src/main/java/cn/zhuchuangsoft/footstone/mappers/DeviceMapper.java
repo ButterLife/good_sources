@@ -3,6 +3,7 @@ package cn.zhuchuangsoft.footstone.mappers;
 import cn.zhuchuangsoft.footstone.entity.InstallPlace;
 import cn.zhuchuangsoft.footstone.entity.QueryParameters;
 import cn.zhuchuangsoft.footstone.entity.device.Device1;
+import cn.zhuchuangsoft.footstone.entity.device.VipDevice;
 import org.apache.ibatis.annotations.*;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -141,4 +142,34 @@ public interface DeviceMapper {
             @Result(column = "INSTALL_PLACE_ADDRESS", property = "installPlaceAddress"),
     })
     InstallPlace getInstallPlaceValue(String deviceId);
+
+    @Insert({"INSERT INTO vipdevice (id,userCode,username,device_code,implace_name,implace_addr,warming_msg,warming_time,warmingCode) VALUES (#{vipDevice1.id},#{vipDevice1.userCode},#{vipDevice1.userName},#{vipDevice1.deviceCode},#{vipDevice1.implaceName},#{vipDevice1.implaceAddr},#{vipDevice1.warmingMsg},#{vipDevice1.warmingTime},#{vipDevice1.warmingCode})"
+    })
+    Integer saveVipDevice(@Param("vipDevice1") VipDevice vipDevice1);
+
+    @Select("SELECT `id`,`userCode`,`username`,`device_code`,`implace_name`,`implace_addr`,`warming_msg`,`warming_time`,warmingCode\n" +
+            "FROM `vipdevice`\n" +
+            "WHERE `userCode`=#{selectUserCode}\n")
+    @Results({
+            @Result(id = true, column = "id", property = "id"),
+            @Result(column = "userCode", property = "userCode"),
+            @Result(column = "username", property = "userName"),
+            @Result(column = "device_code", property = "deviceCode"),
+            @Result(column = "implace_name", property = "implaceName"),
+            @Result(column = "implace_addr", property = "implaceAddr"),
+            @Result(column = "warming_msg", property = "warmingMsg"),
+            @Result(column = "warming_time", property = "warmingTime"),
+            @Result(column = "warmingCode", property = "warmingCode"),
+    })
+    List<VipDevice> selectVipDeviceByUserCode(String selectUserCode);
+
+    /**
+     * 用户取消关注
+     *
+     * @param selectUserCode
+     * @param id
+     * @return
+     */
+    @Delete("DELETE FROM `vipdevice` WHERE userCode=#{selectUserCode} AND id=#{id}")
+    Integer delVipDevice(@Param("selectUserCode") String selectUserCode, @Param("id") Integer id);
 }

@@ -51,13 +51,13 @@ public class JalaWarmingController extends BaseController {
     @Autowired
     private IDeviceWarmingService deviceWarmingService;
     //用来确定一个时间段内是否要插入数据
-    private Boolean flageDoom = true;
+    // private Boolean flageDoom = true;
 
     //3分钟开一次门
-    @Scheduled(fixedDelay = 3 * 60 * 1000)
+    //@Scheduled(fixedDelay = 3 * 60 * 1000)
     @Async
     public void isFlageDoom() {
-        flageDoom = true;
+        //flageDoom = true;
     }
 
     /**
@@ -240,8 +240,8 @@ public class JalaWarmingController extends BaseController {
                 for (DeviceLine line : lines) {
                     //拼接device_code查找设备的各个预警值
                     String deviceCode = 2 + "-" + line.getModel() + "-" + line.getLineID() + "-" + sn;
-
                     if (line.getVoltage() != null) {
+                        // log.info("获取生成预警信息当前电压："+line.getVoltage()+"线路ID："+line.getLineID()+"线路名称："+line.getName());
                         //实时电压的数据
                         Double voltage = line.getVoltage();
                         //获取预警的值 里面是已经分了类型了
@@ -257,50 +257,49 @@ public class JalaWarmingController extends BaseController {
                         if (modelSplit.length >= 2 && modelSplit[1].equals("H")) {
                             if (voltage > 220) {
                                 //就获取过压值来比较
-                                if (voltage >= 245) {
+                                if (voltage >= warmingSetting.getEarlyHeightVoleage()) {
                                     //根据3分钟判断一次是否电压超过预警值
-                                    if (flageDoom) {
-                                        voltageWarming(deviceCode, voltage);
-                                        continue;
-                                    }
+
+                                    voltageWarming(deviceCode, voltage);
+                                    continue;
+
                                 }
                             } else {
                                 //否则就是带H取欠压预警值比较
-                                if (voltage >= 180) {
+                                if (voltage >= warmingSetting.getEarlyLowVoleage()) {
                                     //根据3分钟判断一次是否电压超过预警值
-                                    if (flageDoom) {
-                                        voltageWarming(deviceCode, voltage);
-                                        continue;
-                                    }
+
+                                    voltageWarming(deviceCode, voltage);
+                                    continue;
+
                                 }
                             }
 
                         } else {
                             //不带H的值
-                            if (voltage > 190) {
+                            if (voltage > 220) {
+
                                 //就获取过压值来比较
-                                if (voltage >= 205) {
-                                    if (flageDoom) {
-                                        voltageWarming(deviceCode, voltage);
-                                        continue;
-                                    }
+                                if (voltage >= warmingSetting.getEarlyHeightVoleage()) {
+
+                                    voltageWarming(deviceCode, voltage);
+                                    continue;
+
                                 }
                             } else {
                                 //否则就取欠压预警值比较
-                                if (voltage <= 170) {
-                                    if (flageDoom) {
-                                        voltageWarming(deviceCode, voltage);
-                                        continue;
-                                    }
+                                if (voltage <= warmingSetting.getEarlyLowVoleage()) {
+
+                                    voltageWarming(deviceCode, voltage);
+                                    continue;
                                 }
                             }
 
                         }
 
                     } else {
-                        // log.info("没有获取到电压值");
+                        //log.info("预警的没有获取到电压值");
                     }
-
                 }
             }
         }
@@ -328,8 +327,6 @@ public class JalaWarmingController extends BaseController {
             return;
         }
         warmingServiceImpl.insertWarming(warming);
-        //数据插入成功了就关门了
-        flageDoom = false;
     }
 
     /**

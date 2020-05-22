@@ -6,6 +6,7 @@ import cn.zhuchuangsoft.footstone.entity.QueryParameters;
 import cn.zhuchuangsoft.footstone.entity.device.Device1;
 import cn.zhuchuangsoft.footstone.entity.device.DeviceType;
 import cn.zhuchuangsoft.footstone.entity.device.PoweredDevice;
+import cn.zhuchuangsoft.footstone.entity.device.VipDevice;
 import cn.zhuchuangsoft.footstone.entity.warming.WarmingType;
 import cn.zhuchuangsoft.footstone.mappers.*;
 import cn.zhuchuangsoft.footstone.service.IDeviceService;
@@ -294,5 +295,47 @@ public class DeviceServiceImpl implements IDeviceService {
     @Override
     public InstallPlace getInstallPlaceValue(String deviceId) {
         return deviceMapper.getInstallPlaceValue(deviceId);
+    }
+
+    @Override
+    public Integer saveVipDevice(VipDevice vipDevice1) {
+        return deviceMapper.saveVipDevice(vipDevice1);
+    }
+
+    @Override
+    public InstallPlace getInstallPlaceValueByDeviceCoce(String deviceCode) {
+        return installPlaceMapper.getInstallPlaceValueByDeviceCoce(deviceCode);
+    }
+
+    @Override
+    public Boolean selectVipDevice(String deviceCode, String warmingTime) {
+        String msg = installPlaceMapper.selectVipDevice(deviceCode, warmingTime);
+        return msg != null;
+    }
+
+    /**
+     * 获取到用户关注的警告信息
+     *
+     * @param selectUserCode
+     * @return
+     */
+    @Override
+    public List<VipDevice> selectVipDeviceByUserCode(String selectUserCode) {
+        List<VipDevice> vipDeviceList = deviceMapper.selectVipDeviceByUserCode(selectUserCode);
+        return vipDeviceList;
+    }
+
+    /**
+     * 用户取关
+     *
+     * @param selectUserCode
+     * @param id
+     * @return
+     */
+    @Override
+    public Boolean delVipDeviceByUserCodeAndId(String selectUserCode, Integer id) {
+        Integer del = deviceMapper.delVipDevice(selectUserCode, id);
+        log.info("删除成功" + del.toString());
+        return del > 0;
     }
 }

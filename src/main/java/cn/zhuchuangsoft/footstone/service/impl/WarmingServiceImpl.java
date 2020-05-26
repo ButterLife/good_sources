@@ -264,7 +264,7 @@ public class WarmingServiceImpl implements IWarmingService {
      * @param heightPower
      * @return
      */
-    @CachePut(value = "warmingSetting", key = "'HighPower:'+#a0")
+    //  @CachePut(value = "warmingSetting", key = "'HighPower:'+#a0")
     @Override
     public String updateHeightPower(String deviceCode, String heightPower) {
         String heightPowerOld = warmingSettingMapper.selectHeightPower(deviceCode);
@@ -413,9 +413,15 @@ public class WarmingServiceImpl implements IWarmingService {
                         warming.setWarmingMsg(warmingMsg);
                         //插入数据完成之后就给前端推送最新的数据
                         if (voltgte != null) {
-                            StringBuffer sb = new StringBuffer(warming.getWarmingMsg());
-                            sb.append("当前电压：" + voltgte);
-                            warming.setWarmingMsg(sb.toString());
+                            if (voltgte.contains("瓦")) {
+                                StringBuffer sb = new StringBuffer(warming.getWarmingMsg());
+                                sb.append("当前功率：" + voltgte);
+                                warming.setWarmingMsg(sb.toString());
+                            } else {
+                                StringBuffer sb = new StringBuffer(warming.getWarmingMsg());
+                                sb.append("当前电压：" + voltgte);
+                                warming.setWarmingMsg(sb.toString());
+                            }
                         }
                         WebSocketServer.sendInfo(JsonUtils.toString(warming), userName);
                         Thread.currentThread().sleep(10);

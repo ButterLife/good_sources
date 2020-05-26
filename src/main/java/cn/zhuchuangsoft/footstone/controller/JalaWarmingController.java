@@ -31,9 +31,7 @@ import javax.jws.WebService;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * 拉取Jala设备信息和报警信息
@@ -50,6 +48,8 @@ public class JalaWarmingController extends BaseController {
     IWarmingService warmingServiceImpl;
     @Autowired
     private IDeviceWarmingService deviceWarmingService;
+    //预警前判读是否已经有告警生成
+    private Map<String, Object> warmingMap = new HashMap<>();
     //用来确定一个时间段内是否要插入数据
     // private Boolean flageDoom = true;
 
@@ -207,17 +207,20 @@ public class JalaWarmingController extends BaseController {
 
     }
 
+    @Scheduled(fixedDelay = 3 * 60 * 1000)//一分钟清理map
+    @Async
+    public void clearMap() {
+        warmingMap.clear();
+    }
     /**
      * 实时拉取去jala的数据，判读是否要生成预警信息
+     *
      */
-
-    @Scheduled(fixedDelay = 1500)
+    @Scheduled(fixedDelay = 1800)
     @Async
     public void getPullDeviceMes() throws IOException {
-
         HttpRequestBase httpRequestBase = null;
         List<Device> datas = getDeviceList(httpRequestBase);
-
         //拼接device_code
         if (datas.size() > 0) {
             for (Device deviceSn : datas) {
@@ -255,46 +258,62 @@ public class JalaWarmingController extends BaseController {
                         }
                         //带H的电压预警判断
                         if (modelSplit.length >= 2 && modelSplit[1].equals("H")) {
+                            // 带H功率的预警
+                            Double power = line.getPower();
+                            if (power > warmingSetting.getHeightPower()) {
+                                //功率过大  生成预警信息
+                                voltageWarming(deviceCode, power, "功率预警");
+                                continue;
+                            }
+                            //电压预警
                             if (voltage > 220) {
                                 //就获取过压值来比较
                                 if (voltage >= warmingSetting.getEarlyHeightVoleage()) {
-                                    //根据3分钟判断一次是否电压超过预警值
-
-                                    voltageWarming(deviceCode, voltage);
-                                    continue;
-
+                                    if (!warmingMap.containsKey(deviceCode)) {
+                                        voltageWarming(deviceCode, voltage, "过压预警");
+                                        continue;
+                                    }
                                 }
                             } else {
-                                //否则就是带H取欠压预警值比较
-                                if (voltage >= warmingSetting.getEarlyLowVoleage()) {
-                                    //根据3分钟判断一次是否电压超过预警值
-
-                                    voltageWarming(deviceCode, voltage);
+                                //否则就是带H取欠压预警值比较     //说明没有告警信息生成  2-3PN_H-5DD2476F4C1D6E0EC8AE8622-J191291284776 三相欠压预警没有处理
+                                if (voltage <= warmingSetting.getEarlyLowVoleage()) {
+                                    //说明没有告警信息生成
+                                    voltageWarming(deviceCode, voltage, "欠压预警");
                                     continue;
-
                                 }
                             }
 
                         } else {
+                            // 不带H功率的预警
+                            if (line.getPower() > warmingSetting.getHeightPower()) {
+                                //功率过大，生成功率预警
+                                voltageWarming(deviceCode, line.getPower(), "功率预警");
+                                continue;
+                            }
+
+
                             //不带H的值
                             if (voltage > 220) {
 
                                 //就获取过压值来比较
                                 if (voltage >= warmingSetting.getEarlyHeightVoleage()) {
-
-                                    voltageWarming(deviceCode, voltage);
-                                    continue;
+                                    //说明没有告警信息生成
+                                    if (!warmingMap.containsKey(deviceCode)) {
+                                        voltageWarming(deviceCode, voltage, "过压预警");
+                                        continue;
+                                    }
 
                                 }
                             } else {
                                 //否则就取欠压预警值比较
                                 if (voltage <= warmingSetting.getEarlyLowVoleage()) {
-
-                                    voltageWarming(deviceCode, voltage);
-                                    continue;
+                                    //说明没有告警信息生成
+                                    if (!warmingMap.containsKey(deviceCode)) {
+                                        voltageWarming(deviceCode, voltage, "欠压预警");
+                                        continue;
+                                    }
                                 }
                             }
-
                         }
 
                     } else {
@@ -313,11 +332,16 @@ public class JalaWarmingController extends BaseController {
      * @param deviceCode
      * @param voltage
      */
-    private void voltageWarming(String deviceCode, Double voltage) {
+    private void voltageWarming(String deviceCode, Double voltage, String warmingCode) {
         Warming warming = new Warming();
-        warming.setWarmingCode("电压预警");
+        warming.setWarmingCode(warmingCode);
         warming.setDeviceCodes(deviceCode);
         warming.setHandleMsg(voltage.toString());
+        if ("功率预警".equals(warmingCode)) {
+            warming.setHandleMsg(warming.getHandleMsg() + "瓦");
+            log.info("当前功率：" + warming.getHandleMsg());
+        }
+
         warming.setWarmingTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         //2020年05月21日18时43分，在鳌江新客运中心线路1发生电弧预警
         //设置电压预警的信息   时间+地点+预警信息+现在的电压
@@ -397,7 +421,7 @@ public class JalaWarmingController extends BaseController {
      * 定时异步
      */
 //    @Scheduled(cron = "0/5 * * * * ?")
-    @Scheduled(fixedDelay = 1600)//上一次执行完毕时间点1秒再次执行
+    @Scheduled(fixedDelay = 1500)//上一次执行完毕时间点1秒再次执行
     @Async
     public void getPullWarming() {
         try {
@@ -468,6 +492,7 @@ public class JalaWarmingController extends BaseController {
                     if (warmingServiceImpl.isExsits(warming)) {
                         continue;
                     }
+                    warmingMap.put(warming.getDeviceCodes(), warming);
                     warmingServiceImpl.insertWarming(warming);
                 }
             }

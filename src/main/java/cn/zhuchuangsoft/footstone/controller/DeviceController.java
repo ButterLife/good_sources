@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -181,12 +182,13 @@ public class DeviceController extends BaseController {
                     warmingSetting.setLineId(lineId);
                     warmingSetting.setName(line.getString("Name"));
                     // String highPower = warmingServiceImpl.selectHightPower(deviceCode);
-                    WarmingSetting warmingSetting1 = warmingServiceImpl.selectWarmingSetting(deviceCode);
+                    WarmingSetting selectWwarmingSetting = warmingServiceImpl.selectWarmingSetting(deviceCode);
                     //自己取数据查看电压预警值
-                    warmingSetting.setHeightVoltage(warmingSetting1.getEarlyHeightVoleage());
-                    warmingSetting.setLowVoltage(warmingSetting1.getEarlyLowVoleage());
-                    if (warmingSetting1.getHeightPower() != null && "".equals(warmingSetting1.getHeightPower()))
-                        warmingSetting.setHeightPower(warmingSetting1.getHeightPower());
+                    warmingSetting.setHeightVoltage(selectWwarmingSetting.getEarlyHeightVoleage());
+                    warmingSetting.setLowVoltage(selectWwarmingSetting.getEarlyLowVoleage());
+                    //获取到自己设置的功率
+                    if (selectWwarmingSetting.getHeightPower() != null && !"".equals(selectWwarmingSetting.getHeightPower()))
+                        warmingSetting.setHeightPower(selectWwarmingSetting.getHeightPower());
 
                     return new JsonResult<WarmingSetting>(SUCCESS, warmingSetting);
                 }
@@ -335,7 +337,7 @@ public class DeviceController extends BaseController {
     public JsonResult<String> setVoltage(@ApiParam("设备ID") String deviceId, @ApiParam("线路ID") String lineId, @ApiParam("欠压值 范围175-205") Integer under, @ApiParam("过压值 范围235-265") Integer over) {
         //判读是否超过电压值
         String[] deviceIdSplit = deviceId.split("_");
-        List<String> parameter = new ArrayList<String>();
+
         String deviceCode = null;
         //获取到deviceCode
         List<String> devicelByDeviceIds = deviceServiceImpl.getDevicelByDeviceId(deviceIdSplit[0]);
@@ -350,11 +352,11 @@ public class DeviceController extends BaseController {
                     if (typeSplit.length >= 2 && "H".equals(typeSplit[1])) {
 
                         if (deviceIdSplit.length >= 2 && "O".equals(deviceIdSplit[1])) {
-                            if (over > 270 || over < 255) {
+                            if (over > 280 || over < 270) {
                                 return new JsonResult<String>(FAILED, "-过压范围：255--270");
                             }
                         } else {
-                            if (under < 175 || under > 190) {
+                            if (under < 160 || under > 170) {
                                 return new JsonResult<String>(FAILED, "-欠压范围：175--190");
                             }
                         }
@@ -379,26 +381,15 @@ public class DeviceController extends BaseController {
                     break;
                 }
             }
-           /* parameter.add("DeviceID=" + deviceIdSplit[0]);
-            parameter.add("LineID=" + lineId);
-            parameter.add("Under=" + under);
-            parameter.add("Over=" + over);
-            String authorization = getAuthorization(parameter);
-            String url = "http://ex-api.jalasmart.com/api/v2/devices/" + deviceIdSplit[0] + "/lines/" + lineId + "/under";
-            try {
-                HttpPut put = (HttpPut) getRequestByUrl(url, authorization, 3);
-                JSONObject bodyJson = new JSONObject(true);
-                bodyJson.put("DeviceID", deviceIdSplit[0]);
-                bodyJson.put("LineID", lineId);
-                bodyJson.put("Under", under);
-                bodyJson.put("Over", over);
-                put.setEntity(new StringEntity(bodyJson.toJSONString(), "UTF-8"));
-                JSONObject jsonObject = JSON.parseObject(getJson(put));
-                //跟新或者修改数据
-
-                if (jsonObject.getInteger("Code") != 1) {
-                    return new JsonResult<String>(SUCCESS, "电压设置失败");
-                }*/
+            //修改失败时，就重试5次
+            for (int i = 0; i < 5; i++) {
+                //设置jala那边的电压值
+                if (setJalaVoltage(lineId, under, over, deviceIdSplit[0])) {
+                    continue;
+                } else {
+                    break;
+                }
+            }
             if (deviceCode != null) {
                 //更改数据库中的预警值
                 int update = warmingServiceImpl.updateWarimingSetting(deviceCode, under, over);
@@ -415,6 +406,45 @@ public class DeviceController extends BaseController {
 
         }
         return new JsonResult<String>(FAILED, "没有该设备：设备ID为：" + deviceId);
+    }
+
+    /**
+     * 设置jala那边的电压数据
+     *
+     * @param lineId
+     * @param under
+     * @param over
+     * @param s
+     * @return
+     */
+    private boolean setJalaVoltage(String lineId, Integer under, Integer over, String s) {
+        List<String> parameter = new ArrayList<String>();
+        parameter.add("DeviceID=" + s);
+        parameter.add("LineID=" + lineId);
+        parameter.add("Under=" + under);
+        parameter.add("Over=" + over);
+        String authorization = getAuthorization(parameter);
+        String url = "http://ex-api.jalasmart.com/api/v2/devices/" + s + "/lines/" + lineId + "/under";
+
+        JSONObject jsonObject = null;
+        try {
+            HttpPut put = (HttpPut) getRequestByUrl(url, authorization, 3);
+            JSONObject bodyJson = new JSONObject(true);
+            bodyJson.put("DeviceID", s);
+            bodyJson.put("LineID", lineId);
+            bodyJson.put("Under", under);
+            bodyJson.put("Over", over);
+            put.setEntity(new StringEntity(bodyJson.toJSONString(), "UTF-8"));
+            jsonObject = JSON.parseObject(getJson(put));
+        } catch (IOException e) {
+            log.info(e.getMessage());
+        }
+        //跟新或者修改数据
+
+        if (jsonObject.getInteger("Code") != 1) {
+            return true;
+        }
+        return false;
     }
 
     @PostMapping("set/line/enabled")
@@ -542,15 +572,17 @@ public class DeviceController extends BaseController {
     @ApiOperation("设置过高功率")
     public JsonResult<String> setHeightPower(@ApiParam("设备ID") String deviceId, @ApiParam("线路ID") String lineNo, @ApiParam("最大功率（power）") Integer highPower) {
         //判断设置功率范围。
-        if (highPower <= 0) {
+        if (highPower == null || highPower <= 0) {
             return new JsonResult(FAILED, "范围不能小于等于0");
         }
         String highPowerStr = highPower.toString();
         // 修改成功与否反馈
         String deviceCode = deviceServiceImpl.selectDeviceCode(deviceId, lineNo, "J191291284776");
         String flag = warmingServiceImpl.updateHeightPower(deviceCode, highPowerStr);
-        if (highPowerStr.equals(flag))
-            return new JsonResult<String>(SUCCESS, "");
+        if (highPowerStr.equals(flag)) {
+            return new JsonResult<String>(SUCCESS, "修改成功");
+        }
+
         return new JsonResult<String>(FAILED);
     }
 
@@ -838,6 +870,43 @@ public class DeviceController extends BaseController {
             e.printStackTrace();
         }
         return new JsonResult<>(FAILED);
+    }
+
+    @GetMapping("get/lines/energy")
+    @ApiOperation("实时用电量数据")
+    public JsonResult<String> getEnergy(@ApiParam("设备ID") String deviceId) {
+        Double energy = 0.0;
+        DeviceLine deviceLine = null;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("YYYY-MM-dd");
+        String formatTime = simpleDateFormat.format(new Date());
+        List<String> parameter = new ArrayList<>();
+        parameter.add("DeviceID=" + deviceId);
+        parameter.add("Date=2020-05-23");
+        String authorization = getAuthorization(parameter);
+        String url = "http://ex-api.jalasmart.com/api/v2/energy/" + deviceId + "/2020-05-23";
+        HttpRequestBase httpRequestBase = null;
+        try {
+            httpRequestBase = getRequestByUrl(url, authorization, 1);
+            String json = getJson(httpRequestBase);
+            JSONObject jsonObject = JSON.parseObject(json);
+            JSONArray data = jsonObject.getJSONArray("Data");
+            for (int i = 0; i < data.size(); i++) {
+                JSONObject dataJSONObject = data.getJSONObject(i);
+                JSONArray lines = dataJSONObject.getJSONArray("Lines");
+                for (int j = 0; j < lines.size(); j++) {
+                    JSONObject jsonObjectEnergy = lines.getJSONObject(j);
+                    energy += jsonObjectEnergy.getDouble("Energy");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (energy != null) {
+            DecimalFormat df = new DecimalFormat("#0.00");
+            return new JsonResult<String>(SUCCESS, "获取成功", df.format(energy));
+        }
+        return new JsonResult<String>(FAILED, "0.0");
+
     }
 
     /**

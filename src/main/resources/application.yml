@@ -61,8 +61,8 @@ mybatis:
 
 rsa:
   key:
-    #       pubKeyFile: C:\auth_key\id_key_rsa.pub
-    #       priKeyFile: C:\auth_key\id_key_rsa
+    #           pubKeyFile: C:\auth_key\id_key_rsa.pub
+    #           priKeyFile: C:\auth_key\id_key_rsa
     pubKeyFile: E:\yuechuang\auth_key\id_key_rsa.pub
     priKeyFile: E:\yuechuang\auth_key\id_key_rsa
 logging:

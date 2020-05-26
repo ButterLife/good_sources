@@ -127,7 +127,7 @@ public interface WarmingSettingMapper {
      * @return
      */
     @Update("UPDATE t_warmingsetting SET HEIGHT_POWER = #{heightPower} WHERE DEVICE_CODE = #{deviceCode};")
-    Integer updateHeightPower(String deviceCode, String heightPower);
+    Integer updateHeightPower(@Param("deviceCode") String deviceCode, @Param("heightPower") String heightPower);
 
     @Select("SELECT HEIGHT_POWER from t_warmingsetting WHERE DEVICE_CODE = #{deviceCode};")
     String selectHeightPower(String DeviceCode);
